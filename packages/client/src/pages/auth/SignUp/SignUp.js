@@ -79,7 +79,7 @@ class SignUpPage extends React.Component {
             Sign Up
           </Button>
         </form>
-        <Link to="/">Home</Link>
+        <Link to="/sign-in">Sign In</Link>
       </AuthLayout>
     )
   }

@@ -3,6 +3,19 @@ import to from "await-to-js"
 import config from "config"
 import User from "./model"
 
+export async function signIn(req, res) {
+  let error,
+    user
+
+    // Get user
+  ;[error, user] = await to(User.findOne({ email: req.body.email }))
+  if (error || !user) return userNotFound(res)
+
+  const isMatch = await user.comparePassword(req.body.password)
+  if (!isMatch) return res.status(401).send({ message: "Unathorized." })
+  else return res.status(200).send(createAuthPayload(user))
+}
+
 // Create a new user based on the form submission
 export async function signUp(req, res) {
   let error

@@ -65,11 +65,13 @@ UserSchema.pre("save", function(next) {
 })
 
 // Test candidate password
-UserSchema.methods.comparePassword = function(candidatePassword, cb) {
-  const self = this
-  bcrypt.compare(candidatePassword, self.password, function(err, isMatch) {
-    if (err) return cb(err)
-    cb(null, isMatch)
+UserSchema.methods.comparePassword = function(candidatePassword) {
+  return new Promise(resolve => {
+    const self = this
+    bcrypt.compare(candidatePassword, self.password, function(err, isMatch) {
+      if (err) return resolve(false)
+      resolve(isMatch)
+    })
   })
 }
 
