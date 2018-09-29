@@ -1,10 +1,11 @@
 import express from "express"
+import * as controllers from "./controllers"
 const router = express.Router()
 
 // POST /user/sign-up
-router.post("/sign-up", (req, res) => {
-  console.log(req.body)
-  res.status(200).send({})
-})
+router.post("/sign-up", controllers.signUp)
+
+// POST /user/verify
+router.post("/verify", controllers.verify)
 
 export default router
