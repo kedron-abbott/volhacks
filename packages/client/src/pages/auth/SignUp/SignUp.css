@@ -1,0 +1,4 @@
+.sign-up__phone {
+  display: grid;
+  grid-template-columns: 2fr 5fr;
+  gap: 5px; }

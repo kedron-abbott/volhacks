@@ -1,0 +1,12 @@
+.auth-layout {
+  background-color: mediumaquamarine;
+  width: 100%;
+  height: 100%;
+  padding: 10rem 5rem; }
+  .auth-layout__container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; }
+  .auth-layout__form {
+    width: 100%; }
