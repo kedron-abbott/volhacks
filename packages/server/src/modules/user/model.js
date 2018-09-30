@@ -65,74 +65,71 @@ UserSchema.pre("save", function(next) {
 })
 
 // Test candidate password
-UserSchema.methods.comparePassword = function(candidatePassword, cb) {
-  const self = this
-  bcrypt.compare(candidatePassword, self.password, function(err, isMatch) {
-    if (err) return cb(err)
-    cb(null, isMatch)
+UserSchema.methods.comparePassword = function(candidatePassword) {
+  return new Promise(resolve => {
+    const self = this
+    bcrypt.compare(candidatePassword, self.password, function(err, isMatch) {
+      if (err) return resolve(false)
+      resolve(isMatch)
+    })
   })
 }
 
 // Send a verification token to this user
-UserSchema.methods.sendAuthyToken = function(cb) {
-  let self = this
+UserSchema.methods.sendAuthyToken = function() {
+  return new Promise((resolve, reject) => {
+    let self = this
 
-  if (!self.authyId) {
-    // Register this user if it's a new user
-    authy.register_user(self.email, self.phone, self.countryCode, function(
-      err,
-      response,
-    ) {
-      if (err || !response.user) return cb.call(self, err)
-      self.authyId = response.user.id
-      self.save(function(err, doc) {
-        if (err || !doc) return cb.call(self, err)
-        self = doc
-        sendToken()
+    if (!self.authyId) {
+      // Register this user if it's a new user
+      authy.register_user(self.email, self.phone, self.countryCode, function(
+        err,
+        response,
+      ) {
+        if (err || !response.user) return reject(err)
+        self.authyId = response.user.id
+        self.save(function(err, doc) {
+          if (err || !doc) return reject(err)
+          self = doc
+          sendToken(self.authyId)
+        })
       })
-    })
-  } else {
-    // Otherwise send token to a known user
-    sendToken()
-  }
+    } else {
+      // Otherwise send token to a known user
+      sendToken(self.authyId)
+    }
 
-  // With a valid Authy ID, send the 2FA token for this user
-  function sendToken() {
-    authy.request_sms(self.authyId, true, function(err, response) {
-      cb.call(self, err)
-    })
-  }
+    // With a valid Authy ID, send the 2FA token for this user
+    function sendToken(authyId) {
+      authy.request_sms(authyId, true, function(err, response) {
+        if (err) reject(err)
+        resolve()
+      })
+    }
+  })
 }
 
 // Test a 2FA token
-UserSchema.methods.verifyAuthyToken = function(otp, cb) {
-  const self = this
-  authy.verify(self.authyId, otp, function(err, response) {
-    cb.call(self, err, response)
+UserSchema.methods.verifyAuthyToken = function(otp) {
+  return new Promise((resolve, reject) => {
+    const self = this
+    authy.verify(self.authyId, otp, function(error, response) {
+      if (error) reject(error)
+      resolve(response)
+    })
   })
 }
 
 // Send a text message via twilio to this user
-UserSchema.methods.sendMessage = function(
-  message,
-  successCallback,
-  errorCallback,
-) {
+UserSchema.methods.sendMessage = async function(message) {
   const self = this
   const toNumber = `+${self.countryCode}${self.phone}`
 
-  twilioClient.messages
-    .create({
-      to: toNumber,
-      from: config.twilioNumber,
-      body: message,
-    })
-    .then(function() {
-      successCallback()
-    })
-    .catch(function(err) {
-      errorCallback(err)
-    })
+  await twilioClient.messages.create({
+    to: toNumber,
+    from: config.twilioNumber,
+    body: message,
+  })
 }
 
 // Export user model

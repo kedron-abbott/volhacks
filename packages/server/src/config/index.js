@@ -8,7 +8,7 @@ config.port = process.env.PORT
 
 // A random string that will help generate secure one-time passwords and
 // HTTP sessions
-config.secret = process.env.APP_SECRET
+config.jwtSecret = process.env.JWT_SECRET
 
 // Your Twilio account SID and auth token, both found at:
 // https://www.twilio.com/user/account

@@ -1,4 +1,5 @@
 import React from "react"
+import to from "await-to-js"
 import { Link } from "react-router-dom"
 import { Button, TextField, SelectField } from "react-md"
 import AuthLayout from "../components/AuthLayout"
@@ -6,7 +7,7 @@ import { signUp } from "actions/auth"
 import "./SignUp.css"
 
 class SignUpPage extends React.Component {
-  signUp = e => {
+  signUp = async e => {
     e.preventDefault()
 
     const fullName = document.getElementById("sign-up__full-name").value
@@ -18,9 +19,28 @@ class SignUpPage extends React.Component {
     const phone = document.getElementById("sign-up__phone").value
 
     if (password !== confirmPassword) {
-      console.log("passowrd !== confirmPassword")
+      console.log("password !== confirmPassword")
     } else {
-      signUp(fullName, email, password, countryCode, phone)
+      let error, response
+      ;[error, response] = await to(
+        signUp(fullName, email, password, countryCode, phone),
+      )
+
+      if (error) {
+        let errorMessage
+        try {
+          errorMessage = error.response.data.message || error.message
+        } catch (error) {
+          errorMessage = error.message
+        }
+        this.setState({ error: errorMessage })
+      } else {
+        // Navigate to verify page
+        this.props.history.push({
+          pathname: `/verify/${response.data.user._id}`,
+          state: { user: response.data.user },
+        })
+      }
     }
   }
 
@@ -59,7 +79,7 @@ class SignUpPage extends React.Component {
             Sign Up
           </Button>
         </form>
-        <Link to="/">Home</Link>
+        <Link to="/sign-in">Sign In</Link>
       </AuthLayout>
     )
   }
